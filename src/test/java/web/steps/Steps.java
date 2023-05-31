@@ -3,6 +3,7 @@ package web.steps;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.json.simple.parser.ParseException;
@@ -33,14 +34,14 @@ public class Steps {
     static final ConfigFileReader configFileReader = new ConfigFileReader();
     static final ConnectionManager connectionManager = new ConnectionManager(configFileReader);
 
-   /* @After
+   @After
     public void tearDown() {
         try {
             driver.close();
         } catch (WebDriverException e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     @Given("I open browser")
     public void iOpenBrowser() {
@@ -62,13 +63,14 @@ public class Steps {
         driver.get(parser.getPageObject("urlKey"));
     }
 
-    @When("I fetch jobs")
+    @Then("I fetch jobs")
     public void iFetchJobs() {
         int openJobs = driver.findElements(By.xpath("//*[@id=\"results\"]/div/section/div[2]/div")).size();
         for (int i = 1; i <= openJobs; i++) {
             String department = driver.findElement(By.xpath("//*[@id=\"results\"]/div/section/div[2]/div[" + i + "]/div[1]/span/a")).getText();
             String jobTitle = driver.findElement(By.xpath("//*[@id=\"results\"]/div/section/div[2]/div[" + i + "]/div[1]/h2/a")).getText();
             String location = driver.findElement(By.xpath("//*[@id=\"results\"]/div/section/div[2]/div[" + i + "]/div[1]/p[1]")).getText();
+            connectionManager.executeQuery(String.format(ADD_RESULTS,department,jobTitle,location));
         }
     }
         @And("I accept Cookies")

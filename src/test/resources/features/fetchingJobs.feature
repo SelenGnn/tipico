@@ -7,5 +7,5 @@ Feature: Career Page
     And I accept Cookies
 
   Scenario: Fetching All Jobs
-    When I fetch jobs
+    Then I fetch jobs
 
