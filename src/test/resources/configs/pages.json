@@ -3,6 +3,7 @@
     "urlKey": "https://www.tipico-careers.com/en/jobs/",
     "elementTimeOut": 10,
     "elements": {
+      "acceptCookies": "#_evidon-accept-button"
 
     }
   }

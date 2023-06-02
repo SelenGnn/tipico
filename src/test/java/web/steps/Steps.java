@@ -7,9 +7,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.json.simple.parser.ParseException;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -18,12 +16,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import utils.ConnectionManager;
 import utils.ConfigFileReader;
 import utils.Parser;
-
-import javax.lang.model.element.Element;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import static constants.QueryConstants.ADD_RESULTS;
 
 
@@ -33,6 +27,23 @@ public class Steps {
     public static RemoteWebDriver driver;
     static final ConfigFileReader configFileReader = new ConfigFileReader();
     static final ConnectionManager connectionManager = new ConnectionManager(configFileReader);
+
+    public WebElement getElement(String elementKey) throws IOException, ParseException {
+        String elementValue = parser.getElementKey(elementKey);
+        By selector = bySelector(elementValue);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(selector));
+        return driver.findElement(selector);
+    }
+
+    private By bySelector(String selector) {
+        if (selector.matches("^#[\\w-]+$")) {
+            return By.id(selector.substring(1));
+        } else if (selector.charAt(0) == '/' || selector.charAt(0) == '(' || selector.startsWith("./")) {
+            return By.xpath(selector);
+        } else {
+            return By.cssSelector(selector);
+        }
+    }
 
    @After
     public void tearDown() {
@@ -65,17 +76,29 @@ public class Steps {
 
     @Then("I fetch jobs")
     public void iFetchJobs() {
+        takeJobs();
+    }
+
+    private void takeJobs() {
         int openJobs = driver.findElements(By.xpath("//*[@id=\"results\"]/div/section/div[2]/div")).size();
         for (int i = 1; i <= openJobs; i++) {
-            String department = driver.findElement(By.xpath("//*[@id=\"results\"]/div/section/div[2]/div[" + i + "]/div[1]/span/a")).getText();
-            String jobTitle = driver.findElement(By.xpath("//*[@id=\"results\"]/div/section/div[2]/div[" + i + "]/div[1]/h2/a")).getText();
-            String location = driver.findElement(By.xpath("//*[@id=\"results\"]/div/section/div[2]/div[" + i + "]/div[1]/p[1]")).getText();
-            connectionManager.executeQuery(String.format(ADD_RESULTS,department,jobTitle,location));
+            String a = "//*[@id=\"results\"]/div/section/div[2]/div[";
+            String department = driver.findElement(By.xpath(a + i + "]/div[1]/span/a")).getText();
+            String jobTitle = driver.findElement(By.xpath(a+ i + "]/div[1]/h2/a")).getText();
+            String location = driver.findElement(By.xpath(a + i + "]/div[1]/p[1]")).getText();
+            connectionManager.executeQuery(String.format(ADD_RESULTS, department, jobTitle, location));
         }
     }
-        @And("I accept Cookies")
-        public void iAcceptCookies () {
-            driver.findElement(By.id("_evidon-accept-button")).click();
+
+    @And("I click \"([^\"]*)\"")
+    public void iClick(String elementKey) throws IOException, ParseException {
+        if (getElement(elementKey) != null) {
+            By selector = bySelector(parser.getElementKey(elementKey));
+            wait.until(ExpectedConditions.elementToBeClickable(selector));
+            getElement(elementKey).click();
+        } else {
+            driver.findElement(By.xpath("//*[text()='" + elementKey + "']")).click();
         }
     }
+}
 

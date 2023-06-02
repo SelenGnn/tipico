@@ -4,8 +4,9 @@ Feature: Career Page
     Given I open browser
     And I maximize browser
     And I open "Tipico Careers" page
-    And I accept Cookies
+    And I click "acceptCookies"
 
   Scenario: Fetching All Jobs
     Then I fetch jobs
+
 
