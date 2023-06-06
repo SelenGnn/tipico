@@ -11,30 +11,34 @@ import java.sql.Statement;
 public class ConnectionManager {
 
     private ConfigFileReader configFileReader;
+    private Connection connection;
 
     public ConnectionManager(ConfigFileReader configFileReader) {
         this.configFileReader = configFileReader;
     }
 
-    public Connection createConnection() throws RuntimeException {
+
+    public void createConnection() throws RuntimeException {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
-            Connection connection = DriverManager.getConnection(configFileReader.getDatabaseUrl(), configFileReader.getDatabaseUsername(), configFileReader.getDatabasePassword());
+            this.connection = DriverManager.getConnection(configFileReader.getDatabaseUrl(), configFileReader.getDatabaseUsername(), configFileReader.getDatabasePassword());
             connection.setAutoCommit(false);
-            return connection;
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
-        }
+        } 
 
     }
     public void executeQuery(String query) {
-        try( Connection connection = createConnection(); 
-            Statement statement = connection.createStatement()) {
+        createConnection();
+        try(Statement statement = this.connection.createStatement()) {
             statement.executeQuery(query);
-            connection.commit();
+            this.connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
 
+    public void close() throws SQLException {
+        this.connection.close();
     }
 }
